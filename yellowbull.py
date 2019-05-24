@@ -14,7 +14,7 @@ kLoginUrl = 'https://passport.damai.cn/login?ru=https%3A%2F%2Fwww.damai.cn%2F'
 
 
 class YellowBull:
-    def __init__(self, browser, ticket_url, qr_file, cookie_file, logger):
+    def __init__(self, browser: selenium.webdriver.Chrome, ticket_url, qr_file, cookie_file, logger):
         self.browser = browser
         self.ticket_url = ticket_url
         self.qr_file = qr_file
@@ -38,6 +38,13 @@ class YellowBull:
         self.__logger.info('Start catching.')
         while self.browser.title.find('确认订单') == -1:
             self.__logger.info('Try catching.')
+
+            try:
+                # TODO set Privilege Code
+                self.__set_privilege_code('')
+            except selenium.common.exceptions.NoSuchElementException:
+                pass
+
             self.__set_perform_infos(perform_session, perform_price)
             self.__set_ticket_num(ticket_num)
 
@@ -119,6 +126,12 @@ class YellowBull:
             fp.write(cookies_json)
 
         return True
+
+    def __set_privilege_code(self, privilege_val):
+        input_privilege_val = self.browser.find_element_by_id('privilege_val')
+        input_privilege_val.send_keys(privilege_val)
+        btn_privilege_sub = self.browser.find_element_by_class_name('privilege_sub')
+        btn_privilege_sub.click()
 
     def __choose_one_perform_info(self, div_info_vals, info):
         found = False
