@@ -8,6 +8,8 @@ import selenium.webdriver
 from selenium.webdriver.support.expected_conditions import title_contains
 from selenium.webdriver.support.ui import WebDriverWait
 
+from selenium.webdriver.common.action_chains import ActionChains
+
 
 kDamaiUrl = 'https://www.damai.cn/'
 kLoginUrl = 'https://passport.damai.cn/login?ru=https%3A%2F%2Fwww.damai.cn%2F'
@@ -51,7 +53,9 @@ class YellowBull:
             btn_buy = self.browser.find_element_by_class_name('buybtn')
 
             if btn_buy.text == '立即预定' or btn_buy.text == '立即购买':
-                btn_buy.click()
+                # btn_buy.click()
+                js2 = "var q=document.getElementsByClassName('buybtn')[0].click()"
+                self.browser.execute_script(js2)
                 self.browser.implicitly_wait(1)
 
                 # check err
@@ -64,7 +68,7 @@ class YellowBull:
                     continue
                 else:
                     break
-            elif btn_buy.text == '即将开抢':
+            elif btn_buy.text == '即将开抢' or btn_buy.text == '即将开售':
                 self.__logger.info('Not start yet. refreshing')
                 self.__jump_to_ticket()
             else:
@@ -87,6 +91,8 @@ class YellowBull:
 
         cookies = json.loads(cookies_json)
         for cookie in cookies:
+            if 'expiry' in cookie:
+                del cookie['expiry']
             self.browser.add_cookie(cookie)
         self.browser.refresh()
         return True
@@ -94,7 +100,7 @@ class YellowBull:
     def __qr_code_login(self):
         self.__logger.info("Using QR Code login. QR picture save to: %s", self.qr_file)
         self.browser.get(kLoginUrl)
-        while self.browser.title != '中文登录':
+        while self.browser.title != '大麦登录':
             self.__logger.info('Waiting for login page')
             self.browser.implicitly_wait(1)
 
@@ -163,9 +169,10 @@ class YellowBull:
                     self.__logger.warning('Perform price not found. using default.')
 
     def __set_ticket_num(self, ticket_num):
-        self.__logger.debug('Trying to set number of tickets: %d', ticket_num)
+        self.__logger.info('Trying to set number of tickets: %d', ticket_num)
         try:
             input_ticket_num = self.browser.find_element_by_class_name('cafe-c-input-number-input')
+            input_ticket_num.clear()
             input_ticket_num.send_keys(str(ticket_num))
         except selenium.common.exceptions.NoSuchElementException:
             pass
@@ -198,9 +205,23 @@ class YellowBull:
 
     def __order_ticket(self):
         self.__logger.info('Start order process')
-        if self.browser.title.find('确认订单') == -1:
-            self.__logger.error('Order err. Wrong page.')
-            return False
+        for i in range(5):
+            if self.browser.title.find('确认订单') == -1:
+                if i < 4:
+                    time.sleep(0.25)
+                    self.__logger.info("Retrying.")
+                    continue
+                else:
+                    self.__logger.error('Order err. Wrong page. Title: %s', self.browser.title)
+                    return False
+            else:
+                break
+
+        div_buyer_list = self.browser.find_element_by_class_name("dm-ticket-buyer").find_element_by_class_name('ticket-buyer-select').find_elements_by_class_name("buyer-list-item")
+        self.__logger.info("Num of buyer: %d", len(div_buyer_list))
+        for div_buyer in div_buyer_list:
+            if div_buyer.get_attribute("class").find("checked") == -1:
+                div_buyer.click()
 
         try:
             btn_order = self.browser.find_element_by_class_name('submit-wrapper').find_element_by_class_name('next-btn')
@@ -228,7 +249,7 @@ def main(argv):
     kQRPicPath = 'QR.png'
     kCookiesPath = 'cookies.json'
     kLogPath = 'test.log'
-    kTicketUrl = 'https://detail.damai.cn/item.htm?spm=a2oeg.home.card_0.ditem_4.715223e1babBKN&id=594317472320'
+    kTicketUrl = 'https://detail.damai.cn/item.htm?spm=a2oeg.search_category.0.0.227928dfQCZt9m&id=600583263497'
 
     def get_logger(log_file):
         import logging
@@ -240,7 +261,7 @@ def main(argv):
         sh.setLevel(logging.INFO)
         sh.setFormatter(fmt)
         fh = logging.FileHandler(log_file)
-        fh.setLevel(logging.INFO)
+        fh.setLevel(logging.DEBUG)
         fh.setFormatter(fmt)
         logger.addHandler(sh)
         logger.addHandler(fh)
@@ -248,7 +269,7 @@ def main(argv):
         return logger
 
     options = selenium.webdriver.ChromeOptions()
-    options.add_argument('headless')
+    # options.add_argument('headless')
     browser = selenium.webdriver.Chrome(options=options)
 
     bull = YellowBull(browser, kTicketUrl, kQRPicPath, kCookiesPath, get_logger(kLogPath))
@@ -256,7 +277,7 @@ def main(argv):
     bull.login()
     print(bull.check_login())
 
-    bull.catch_ticket('8月22-23日套票，包含两张门票', '499元', 2)
+    bull.catch_ticket('2019-11-09', '900元', 1)
 
 
 if __name__ == '__main__':

@@ -13,7 +13,9 @@ kCookiesPath = 'cookies.json'
 kLogPath = 'test.log'
 
 # TI9 url
-kTicketUrl = 'https://detail.damai.cn/item.htm?spm=a2oeg.home.card_2.ditem_0.591b23e14q0SEE&id=593089517773'
+#kTicketUrl = 'https://detail.damai.cn/item.htm?spm=a2oeg.home.card_2.ditem_0.591b23e14q0SEE&id=593089517773'
+
+kTicketUrl = "https://detail.damai.cn/item.htm?spm=a2oeg.search_category.0.0.227928dfOlpXzC&id=600583263497"
 
 # Test url
 #kTicketUrl = 'https://detail.damai.cn/item.htm?spm=a2oeg.home.card_0.ditem_4.715223e1babBKN&id=594317472320'
