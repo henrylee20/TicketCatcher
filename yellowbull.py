@@ -52,7 +52,7 @@ class YellowBull:
 
             btn_buy = self.browser.find_element_by_class_name('buybtn')
 
-            if btn_buy.text == '立即预定' or btn_buy.text == '立即购买':
+            if btn_buy.text.find('立即') != -1:
                 # btn_buy.click()
                 js2 = "var q=document.getElementsByClassName('buybtn')[0].click()"
                 self.browser.execute_script(js2)
@@ -68,7 +68,7 @@ class YellowBull:
                     continue
                 else:
                     break
-            elif btn_buy.text == '即将开抢' or btn_buy.text == '即将开售':
+            elif btn_buy.text.find('即将') != -1:
                 self.__logger.info('Not start yet. refreshing')
                 self.__jump_to_ticket()
             else:
