@@ -13,10 +13,10 @@ class YellowBullEngine:
         def run(self):
             self.core.catch_ticket(self.cfg)
 
-    def __init__(self, core: YellowBullCore, cfg: dict, thread_num=1):
+    def __init__(self, yellow_bull_cores: list, cfg: dict):
         self.cylinder_list = list()
 
-        for i in range(thread_num):
+        for core in yellow_bull_cores:
             cylinder = YellowBullEngine.Cylinder(core, cfg)
             self.cylinder_list.append(cylinder)
 
